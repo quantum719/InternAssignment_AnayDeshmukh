@@ -185,7 +185,7 @@ def update_employee(employee_id: int, data: EmployeeUpdate):
             values,
         )
         conn.commit()
-    except mysql.connector.IntegrityError:
+    except sqlite3.IntegrityError:
         cursor.close()
         conn.close()
         raise HTTPException(
