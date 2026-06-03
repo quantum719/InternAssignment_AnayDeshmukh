@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-DB_NAME = "anaykimkc.db"
+DB_NAME = "emp.db"
 
 
 def get_connection():
