@@ -6,7 +6,7 @@ from datetime import date
 from database import get_connection, init_db
 from models import EmployeeCreate, EmployeeUpdate
 
-import mysql.connector
+import sqlite3
 
 
 # ─── Startup: initialise the DB before accepting requests ───────────
@@ -70,7 +70,7 @@ def get_employee(employee_id: int):
     """Return a single employee by their integer ID."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM employees WHERE employee_id = %s", (employee_id,))
+    cursor.execute("SELECT * FROM employees WHERE employee_id = ?", (employee_id,))
     row = cursor.fetchone()
 
     if row is None:
@@ -106,7 +106,7 @@ def create_employee(data: EmployeeCreate):
             INSERT INTO employees
                 (first_name, last_name, email, phone_number,
                  department, designation, salary, joining_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 data.first_name,
@@ -122,7 +122,7 @@ def create_employee(data: EmployeeCreate):
         conn.commit()
         new_id = cursor.lastrowid
 
-    except mysql.connector.IntegrityError:
+    except sqlite3.IntegrityError:
         cursor.close()
         conn.close()
         raise HTTPException(
@@ -131,7 +131,7 @@ def create_employee(data: EmployeeCreate):
         )
 
     # Fetch and return the newly created record
-    cursor.execute("SELECT * FROM employees WHERE employee_id = %s", (new_id,))
+    cursor.execute("SELECT * FROM employees WHERE employee_id = ?", (new_id,))
     new_employee = row_to_dict(cursor, cursor.fetchone())
     cursor.close()
     conn.close()
@@ -156,7 +156,7 @@ def update_employee(employee_id: int, data: EmployeeUpdate):
     cursor = conn.cursor()
 
     # Confirm employee exists before attempting the update
-    cursor.execute("SELECT employee_id FROM employees WHERE employee_id = %s", (employee_id,))
+    cursor.execute("SELECT employee_id FROM employees WHERE employee_id = ?", (employee_id,))
     if cursor.fetchone() is None:
         cursor.close()
         conn.close()
@@ -176,12 +176,12 @@ def update_employee(employee_id: int, data: EmployeeUpdate):
             detail="No valid fields provided to update.",
         )
 
-    set_clause = ", ".join(f"{col} = %s" for col in updates)
+    set_clause = ", ".join(f"{col} = ?" for col in updates)
     values     = list(updates.values()) + [employee_id]
 
     try:
         cursor.execute(
-            f"UPDATE employees SET {set_clause} WHERE employee_id = %s",
+            f"UPDATE employees SET {set_clause} WHERE employee_id = ?",
             values,
         )
         conn.commit()
@@ -194,7 +194,7 @@ def update_employee(employee_id: int, data: EmployeeUpdate):
         )
 
     # Fetch and return the updated record
-    cursor.execute("SELECT * FROM employees WHERE employee_id = %s", (employee_id,))
+    cursor.execute("SELECT * FROM employees WHERE employee_id = ?", (employee_id,))
     updated_employee = row_to_dict(cursor, cursor.fetchone())
     cursor.close()
     conn.close()
@@ -215,7 +215,7 @@ def delete_employee(employee_id: int):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT employee_id FROM employees WHERE employee_id = %s", (employee_id,))
+    cursor.execute("SELECT employee_id FROM employees WHERE employee_id = ?", (employee_id,))
     if cursor.fetchone() is None:
         cursor.close()
         conn.close()
@@ -224,7 +224,7 @@ def delete_employee(employee_id: int):
             detail=f"Employee with ID {employee_id} not found",
         )
 
-    cursor.execute("DELETE FROM employees WHERE employee_id = %s", (employee_id,))
+    cursor.execute("DELETE FROM employees WHERE employee_id = ?", (employee_id,))
     conn.commit()
     cursor.close()
     conn.close()

@@ -1,21 +1,16 @@
-import mysql.connector
+import sqlite3
 import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-DB_CONFIG = {
-    "host":     os.getenv("DB_HOST", "localhost"),
-    "user":     os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME"),
-}
+DB_NAME = "anaykimkc.db"
 
 
 def get_connection():
     """Return a new MySQL connection using the DB_CONFIG settings."""
-    return mysql.connector.connect(**DB_CONFIG)
+    return sqlite3.connect(DB_NAME)
 
 
 def init_db():
@@ -56,7 +51,7 @@ def init_db():
             INSERT INTO employees
                 (first_name, last_name, email, phone_number,
                  department, designation, salary, joining_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, sample_employees)
         conn.commit()
         print("✅  Sample data inserted.")
